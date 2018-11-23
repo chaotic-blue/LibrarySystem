@@ -1,0 +1,121 @@
+create or replace PROCEDURE insertbook_proc(  
+  pname IN books.bname%TYPE,
+  pwriter IN books.writer%TYPE,
+  plocation IN BOOKS.LOCATION%TYPE,
+  pamount IN books.amount%TYPE,
+  pcomments IN books.comments%TYPE,
+  ppublisher IN books.publisher%TYPE,
+  pcheck out NUMBER) IS
+
+tmpid books.bname%TYPE;
+tmpamount books.amount%TYPE;
+
+BEGIN
+  SELECT amount, bid
+  INTO tmpamount, tmpid
+  FROM books
+  WHERE bname = pname AND publisher = ppublisher;
+  
+  UPDATE books
+  SET amount = amount + pamount
+  WHERE bid = tmpid;
+  
+  UPDATE books
+  SET MAXAMOUNT = maxamount + pamount
+  WHERE bid = tmpid;
+  commit;
+  pcheck := 1;
+  
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+   INSERT INTO books
+   VALUES(book_seq.nextval, pname,pwriter,plocation,pamount,pcomments,ppublisher,pamount);
+   commit;
+   pcheck := 1;
+  WHEN OTHERS THEN
+    pcheck := -1;
+END insertbook_proc;
+
+
+
+
+create or replace PROCEDURE rental_proc
+ ( bookid IN books.bid%TYPE,
+   user_id IN member.id%TYPE,
+   p_check OUT NUMBER) IS
+   
+   p_id books.bid%TYPE;
+   p_name books.bname%TYPE;
+   p_writer books.writer%TYPE;
+   p_pub BOOKS.PUBLISHER%TYPE;
+   p_amount BOOKS.AMOUNT%TYPE;
+   no_book EXCEPTION;
+ BEGIN
+  
+  SELECT bid, bname, writer, publisher,amount
+  INTO p_id, p_name, p_writer, p_pub, p_amount
+  FROM books WHERE bid = bookid;
+ 
+  if(p_amount = 0) then 
+    RAISE no_book;
+  end if;
+  
+  UPDATE books
+  SET amount = amount - 1
+  WHERE bid = bookid;
+   
+  INSERT INTO record
+  VALUES (p_id, p_name, p_writer, p_pub, 'rental', sysdate,user_id);
+  commit;
+  p_check := 1;
+ EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    rollback;
+    p_check := 0;
+  
+  WHEN no_book THEN
+   rollback;
+   p_check := -1; 
+END rental_proc;
+
+create or replace PROCEDURE return_proc
+ ( bookid IN books.bid%TYPE,
+   user_id IN member.id%TYPE,
+   p_check OUT NUMBER) IS
+   
+   p_id books.bid%TYPE;
+   p_name books.bname%TYPE;
+   p_writer books.writer%TYPE;
+   p_pub BOOKS.PUBLISHER%TYPE;
+   p_amount BOOKS.AMOUNT%TYPE;
+   p_maxamount BOOKS.MAXAMOUNT%TYPE;
+   too_many_book EXCEPTION;
+   
+ BEGIN
+  
+  SELECT bid, bname, writer, publisher,amount,maxamount
+  INTO p_id, p_name, p_writer, p_pub, p_amount,p_maxamount
+  FROM books WHERE bid = bookid;
+  
+  if (p_maxamount < p_amount + 1) then
+    RAISE too_many_book;
+  end if;
+  
+  UPDATE books
+  SET amount = amount + 1
+  WHERE bid = bookid;
+   
+  INSERT INTO record
+  VALUES (p_id, p_name, p_writer, p_pub, 'return', sysdate,user_id);
+  commit;
+  p_check := 1;
+  
+ EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    rollback;
+    p_check := 0;
+    
+  WHEN too_many_book THEN
+    rollback;
+    p_check := -1;
+END return_proc;

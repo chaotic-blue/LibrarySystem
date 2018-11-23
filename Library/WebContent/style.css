@@ -1,0 +1,55 @@
+@charset "UTF-8";
+
+nav {
+   z-index: 9999;
+}
+
+.layer{
+	position:absolute;
+	top:50%;
+	left:50%;
+	transform:translate(-50%, -50%)
+}
+
+.jumbotron {
+	background: url("image/library.jpg");
+	height: 885px;
+}
+
+.jumbotron .display-4, .jumbotron p {
+	color: white;
+	padding: 20px;
+	background: rgba(0,0,0,0.6);
+	font-weight: bold;
+}
+
+.form-signin {
+	width: 100%;
+	max-width: 330px;
+	padding: 15px;
+	margin: auto;
+	margin-top: 330px;
+}
+.form-signin .checkbox {
+	font-weight: 400;
+}
+.form-signin .form-control {
+	position: relative;
+	box-sizing: border-box;
+	height: auto;
+	padding: 10px;
+	font-size: 16px;
+}
+.form-signin .form-control:focus {
+	z-index: 2;
+}
+.form-signin input[type="email"] {
+	margin-bottom: -1px;
+	border-bottom-right-radius: 0;
+	border-bottom-left-radius: 0;
+}
+.form-signin input[type="password"] {
+	margin-bottom: 10px;
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+}
